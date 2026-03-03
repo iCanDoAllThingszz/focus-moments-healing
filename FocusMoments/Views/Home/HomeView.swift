@@ -48,6 +48,7 @@ struct HomeView: View {
         .sheet(isPresented: $showDurationPicker) {
             DurationPickerView(duration: $selectedDuration, scene: selectedScene, showTimer: $showTimer, showPicker: $showDurationPicker)
                 .presentationDetents([.height(300)])
+                .environmentObject(timerViewModel)
         }
     }
 
