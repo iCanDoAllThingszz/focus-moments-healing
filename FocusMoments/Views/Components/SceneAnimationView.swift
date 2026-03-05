@@ -246,7 +246,7 @@ struct BirdAnimation: View {
                 trunk.addLine(to: CGPoint(x: sz.width*0.5, y: sz.height*0.65))
                 ctx.stroke(trunk, with: .color(Color(hex:"8B4513")), lineWidth: 6)
 
-                for side: CGFloat in [-1, 1] {
+                for side in [CGFloat(-1), CGFloat(1)] {
                     var branch = Path()
                     branch.move(to: CGPoint(x: sz.width*0.5, y: sz.height*0.72))
                     branch.addQuadCurve(to: CGPoint(x: sz.width*0.5 + side*sz.width*0.28, y: sz.height*0.6),
@@ -267,7 +267,7 @@ struct BirdAnimation: View {
                 let wingFlap = sin(t * 8) * 0.3
 
                 ctx.translateBy(x: birdX, y: birdY)
-                for side: CGFloat in [-1, 1] {
+                for side in [CGFloat(-1), CGFloat(1)] {
                     var wing = Path()
                     wing.move(to: .zero)
                     wing.addQuadCurve(
@@ -406,7 +406,7 @@ struct ButterflyAnimation: View {
     let size: CGFloat
 
     func drawWings(ctx: GraphicsContext, sz: CGSize, flap: CGFloat, color: Color) {
-        for side: CGFloat in [-1, 1] {
+        for side in [CGFloat(-1), CGFloat(1)] {
             var wing = Path()
             let cx = sz.width/2, cy = sz.height/2
             wing.move(to: CGPoint(x: cx, y: cy))
@@ -456,7 +456,7 @@ struct ButterflyAnimation: View {
                 ctx.fill(body, with: .color(Color(hex:"795548")))
 
                 // antennae
-                for side: CGFloat in [-1, 1] {
+                for side in [CGFloat(-1), CGFloat(1)] {
                     var ant = Path()
                     ant.move(to: CGPoint(x: sz.width/2, y: sz.height/2-10))
                     ant.addQuadCurve(
