@@ -498,7 +498,7 @@ struct RainbowAnimation: View {
 
                 // clouds
                 func drawCloud(cx: CGFloat, cy: CGFloat, scale: CGFloat) {
-                    for offset in [(0.0,0.0),(−0.4,0.3),(0.4,0.3),(−0.8,0.5),(0.8,0.5)] {
+                    for offset in [(0.0,0.0),(-0.4,0.3),(0.4,0.3),(-0.8,0.5),(0.8,0.5)] {
                         let r = sz.width * 0.08 * scale
                         ctx.fill(Path(ellipseIn: CGRect(
                             x: cx + sz.width*CGFloat(offset.0)*scale*0.5 - r,
