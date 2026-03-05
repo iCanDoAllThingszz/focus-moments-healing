@@ -496,19 +496,21 @@ struct RainbowAnimation: View {
                     ctx.stroke(drop, with: .color(Color(hex:"90CAF9").opacity(0.5)), lineWidth: 1)
                 }
 
-                // clouds
-                func drawCloud(cx: CGFloat, cy: CGFloat, scale: CGFloat) {
-                    for offset in [(0.0,0.0),(-0.4,0.3),(0.4,0.3),(-0.8,0.5),(0.8,0.5)] {
-                        let r = sz.width * 0.08 * scale
-                        ctx.fill(Path(ellipseIn: CGRect(
-                            x: cx + sz.width*CGFloat(offset.0)*scale*0.5 - r,
-                            y: cy + sz.height*CGFloat(offset.1)*scale*0.3 - r,
-                            width: r*2, height: r*2)),
-                            with: .color(Color.white.opacity(0.9)))
+                // clouds (inlined to avoid inout capture issue)
+                let cloudDefs: [(cx: CGFloat, cy: CGFloat, sc: CGFloat)] = [
+                    (sz.width*0.2, sz.height*0.15, 1.0),
+                    (sz.width*0.75, sz.height*0.12, 0.8)
+                ]
+                let cloudOffsets: [(Double, Double)] = [(0,0),(-0.4,0.3),(0.4,0.3),(-0.8,0.5),(0.8,0.5)]
+                for cloud in cloudDefs {
+                    for off in cloudOffsets {
+                        let r = sz.width * 0.08 * cloud.sc
+                        let ox = cloud.cx + sz.width * CGFloat(off.0) * cloud.sc * 0.5 - r
+                        let oy = cloud.cy + sz.height * CGFloat(off.1) * cloud.sc * 0.3 - r
+                        ctx.fill(Path(ellipseIn: CGRect(x: ox, y: oy, width: r*2, height: r*2)),
+                                 with: .color(Color.white.opacity(0.9)))
                     }
                 }
-                drawCloud(cx: sz.width*0.2, cy: sz.height*0.15, scale: 1.0)
-                drawCloud(cx: sz.width*0.75, cy: sz.height*0.12, scale: 0.8)
 
                 // rainbow arcs
                 let showProgress = min(1.0, max(0.0, t / 5.0))
