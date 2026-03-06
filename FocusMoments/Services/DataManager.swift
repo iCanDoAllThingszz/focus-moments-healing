@@ -38,6 +38,11 @@ final class DataManager {
         set { defaults.set(newValue, forKey: "unlockedSceneIds") }
     }
 
+    var themeStyle: String {
+        get { defaults.string(forKey: "themeStyle") ?? "softOrb" }
+        set { defaults.set(newValue, forKey: "themeStyle") }
+    }
+
     private init() {
         // Initialize defaults
         if defaults.object(forKey: "unlockedSceneIds") == nil {
