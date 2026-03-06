@@ -539,3 +539,351 @@ struct RainbowAnimation: View {
         .frame(width: size, height: size)
     }
 }
+
+// MARK: - Rain Animation
+struct RainAnimation: View {
+    let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            Canvas { ctx, sz in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let intensity = CGFloat(0.3 + progress * 0.7)
+                let dropCount = Int(20 + progress * 60)
+                for i in 0..<dropCount {
+                    let rx = sz.width * CGFloat(i) / CGFloat(dropCount) + CGFloat(i % 4) * 8
+                    let ry = fmod(CGFloat(t) * (150 + intensity * 100) + CGFloat(i * 27), sz.height)
+                    let len = 8 + intensity * 8
+                    var drop = Path()
+                    drop.move(to: CGPoint(x: rx, y: ry))
+                    drop.addLine(to: CGPoint(x: rx - 2, y: ry + len))
+                    ctx.stroke(drop, with: .color(Color(hex:"7EC8E3").opacity(Double(0.4 + intensity * 0.3))), lineWidth: 1)
+                }
+                let glareXs: [CGFloat] = [0.2, 0.5, 0.75]
+                for gx in glareXs {
+                    var glare = Path()
+                    glare.move(to: CGPoint(x: sz.width * gx, y: 0))
+                    glare.addLine(to: CGPoint(x: sz.width * gx + 10, y: sz.height))
+                    ctx.stroke(glare, with: .color(Color.white.opacity(0.06)), lineWidth: 2)
+                }
+                if celebrating {
+                    let center = CGPoint(x: sz.width/2, y: sz.height*0.8)
+                    let colors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple]
+                    for (idx, color) in colors.enumerated() {
+                        let r = sz.width * (0.15 + CGFloat(idx) * 0.04)
+                        var arc = Path()
+                        arc.addArc(center: center, radius: r, startAngle: .degrees(180), endAngle: .degrees(360), clockwise: false)
+                        ctx.stroke(arc, with: .color(color.opacity(0.8)), lineWidth: 4)
+                    }
+                }
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+// MARK: - Campfire Animation
+struct CampfireAnimation: View {
+    let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            Canvas { ctx, sz in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let intensity = CGFloat(0.4 + progress * 0.6)
+                let cx = sz.width / 2
+                let base = sz.height * 0.75
+                let logDirs: [CGFloat] = [-1, 1]
+                for side in logDirs {
+                    var log = Path()
+                    log.move(to: CGPoint(x: cx + side*sz.width*0.18, y: base+8))
+                    log.addLine(to: CGPoint(x: cx - side*sz.width*0.05, y: base))
+                    ctx.stroke(log, with: .color(Color(hex:"5C3317")), lineWidth: 6)
+                }
+                let flameH = sz.height * (0.18 + intensity * 0.15)
+                let flicker = CGFloat(sin(t * 7)) * 0.15
+                let flameColors: [Color] = [Color(hex:"FF4500"), Color(hex:"FF8C00"), Color(hex:"FFD700")]
+                for layer in 0..<3 {
+                    let layerScale = CGFloat(1.0 - Double(layer) * 0.25)
+                    var flame = Path()
+                    let fw = sz.width * 0.12 * layerScale * intensity
+                    flame.move(to: CGPoint(x: cx, y: base))
+                    flame.addCurve(
+                        to: CGPoint(x: cx, y: base - flameH * layerScale),
+                        control1: CGPoint(x: cx - fw, y: base - flameH * 0.4 * layerScale),
+                        control2: CGPoint(x: cx - fw * (0.5 + flicker), y: base - flameH * 0.8 * layerScale)
+                    )
+                    flame.addCurve(
+                        to: CGPoint(x: cx, y: base),
+                        control1: CGPoint(x: cx + fw * (0.5 - flicker), y: base - flameH * 0.8 * layerScale),
+                        control2: CGPoint(x: cx + fw, y: base - flameH * 0.4 * layerScale)
+                    )
+                    ctx.fill(flame, with: .color(flameColors[layer].opacity(Double(0.7 * layerScale))))
+                }
+                let sparkCount = Int(8 + progress * 20)
+                for i in 0..<sparkCount {
+                    let seed = Double(i * 71)
+                    let sx = cx + CGFloat(sin(seed + t * 2)) * sz.width * 0.1
+                    let sy = base - fmod(CGFloat(t * 80 + seed * 40), sz.height * 0.7)
+                    let sr: CGFloat = 1.5
+                    let alpha = Double(max(0, 0.8 - Double(sy) / Double(sz.height)))
+                    ctx.fill(Path(ellipseIn: CGRect(x:sx-sr, y:sy-sr, width:sr*2, height:sr*2)),
+                             with: .color(Color(hex:"FFA500").opacity(alpha)))
+                }
+                if celebrating {
+                    for i in 0..<30 {
+                        let angle = Double(i) / 30 * .pi * 2
+                        let dist = sz.width * 0.3 * CGFloat(fmod(t, 1.0))
+                        let px = cx + cos(angle) * dist
+                        let py = base + sin(angle) * dist * 0.5
+                        let alpha = max(0.0, 1.0 - fmod(t, 1.0))
+                        ctx.fill(Path(ellipseIn: CGRect(x:px-3, y:py-3, width:6, height:6)),
+                                 with: .color(Color(hex:"FFD700").opacity(alpha)))
+                    }
+                }
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+// MARK: - Snow Animation
+struct SnowAnimation: View {
+    let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            Canvas { ctx, sz in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let flakeCount = Int(20 + progress * 80)
+                let groundH = sz.height * CGFloat(progress) * 0.15
+                if groundH > 0 {
+                    let groundRect = CGRect(x: 0, y: sz.height - groundH, width: sz.width, height: groundH)
+                    ctx.fill(Path(roundedRect: groundRect, cornerRadius: 0),
+                             with: .color(Color.white.opacity(0.6)))
+                }
+                for i in 0..<flakeCount {
+                    let seed = Double(i * 113)
+                    let fx = sz.width * CGFloat((seed * 0.618).truncatingRemainder(dividingBy: 1.0))
+                    let speed = 40.0 + seed.truncatingRemainder(dividingBy: 30.0)
+                    let fy = fmod(CGFloat(t) * CGFloat(speed) + CGFloat(seed * 20), sz.height)
+                    let drift = CGFloat(sin(t * 0.5 + seed)) * 8
+                    let fr = CGFloat(1.5 + seed.truncatingRemainder(dividingBy: 3.0))
+                    ctx.fill(Path(ellipseIn: CGRect(x: fx+drift-fr, y: fy-fr, width: fr*2, height: fr*2)),
+                             with: .color(Color.white.opacity(0.85)))
+                }
+                if celebrating {
+                    let cx = sz.width/2, cy = sz.height/2
+                    let burstT = fmod(t, 1.5)
+                    for i in 0..<12 {
+                        let angle = Double(i) / 12 * .pi * 2
+                        let dist = sz.width * 0.3 * CGFloat(burstT / 1.5)
+                        let px = cx + cos(angle) * dist
+                        let py = cy + sin(angle) * dist
+                        let alpha = max(0.0, 1.0 - burstT / 1.5)
+                        ctx.fill(Path(ellipseIn: CGRect(x:px-4, y:py-4, width:8, height:8)),
+                                 with: .color(Color.white.opacity(alpha)))
+                    }
+                }
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+// MARK: - Aurora Animation
+struct AuroraAnimation: View {
+    let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
+
+    let auroraColors: [Color] = [
+        Color(hex:"00F5D4"), Color(hex:"7B2FBE"),
+        Color(hex:"00B4D8"), Color(hex:"48CAE4"),
+        Color(hex:"A9FF96"), Color(hex:"FF6B9D")
+    ]
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            Canvas { ctx, sz in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let bandCount = max(2, Int(2 + progress * 4))
+                for band in 0..<bandCount {
+                    let colorIdx = band % auroraColors.count
+                    let phase = Double(band) * 0.8
+                    let yBase = sz.height * CGFloat(0.2 + Double(band) * 0.12)
+                    let amplitude = sz.height * CGFloat(0.06 + progress * 0.04)
+                    let alpha = 0.3 + progress * 0.4
+                    var wavePath = Path()
+                    wavePath.move(to: CGPoint(x: 0, y: sz.height))
+                    for x in stride(from: 0.0, through: Double(sz.width), by: 3.0) {
+                        let y = yBase + amplitude * CGFloat(sin(x * 0.015 + t * 0.8 + phase))
+                        wavePath.addLine(to: CGPoint(x: x, y: y))
+                    }
+                    wavePath.addLine(to: CGPoint(x: sz.width, y: sz.height))
+                    wavePath.closeSubpath()
+                    ctx.fill(wavePath, with: .color(auroraColors[colorIdx].opacity(alpha)))
+                }
+                for i in 0..<30 {
+                    let seed = Double(i * 97)
+                    let sx = sz.width * CGFloat((seed * 0.618).truncatingRemainder(dividingBy: 1.0))
+                    let sy = sz.height * 0.3 * CGFloat((seed * 0.382).truncatingRemainder(dividingBy: 1.0))
+                    let alpha = 0.4 + 0.6 * sin(t * 1.5 + seed)
+                    ctx.fill(Path(ellipseIn: CGRect(x:sx-1, y:sy-1, width:2, height:2)),
+                             with: .color(Color.white.opacity(alpha)))
+                }
+                if celebrating {
+                    let cx = sz.width/2, cy = sz.height/2
+                    let burstT = fmod(t, 1.0)
+                    for (i, color) in auroraColors.enumerated() {
+                        let r = sz.width * CGFloat(0.1 + Double(i) * 0.06 + burstT * 0.2)
+                        let alpha = max(0.0, 1.0 - burstT)
+                        ctx.stroke(Path(ellipseIn: CGRect(x:cx-r, y:cy-r, width:r*2, height:r*2)),
+                                   with: .color(color.opacity(alpha)), lineWidth: 2)
+                    }
+                }
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+// MARK: - Meteor Animation
+struct MeteorAnimation: View {
+    let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            Canvas { ctx, sz in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let meteorCount = max(1, Int(1 + progress * 4))
+                for i in 0..<50 {
+                    let seed = Double(i * 137)
+                    let sx = sz.width * CGFloat((seed * 0.618).truncatingRemainder(dividingBy: 1.0))
+                    let sy = sz.height * CGFloat((seed * 0.382).truncatingRemainder(dividingBy: 1.0))
+                    let alpha = 0.3 + 0.7 * sin(t + seed)
+                    let r: CGFloat = seed.truncatingRemainder(dividingBy: 3.0) < 1 ? 1.5 : 0.8
+                    ctx.fill(Path(ellipseIn: CGRect(x:sx-r, y:sy-r, width:r*2, height:r*2)),
+                             with: .color(Color.white.opacity(alpha)))
+                }
+                for i in 0..<meteorCount {
+                    let seed = Double(i * 53 + 17)
+                    let cycle = fmod(t * 0.4 + seed * 0.3, 1.0)
+                    let startX = sz.width * CGFloat((seed * 0.4).truncatingRemainder(dividingBy: 1.0))
+                    let mx = startX + sz.width * CGFloat(cycle) * 0.6
+                    let my = sz.height * CGFloat(cycle) * 0.5
+                    let tailLen: CGFloat = 40 + CGFloat(progress) * 30
+                    var meteor = Path()
+                    meteor.move(to: CGPoint(x: mx, y: my))
+                    meteor.addLine(to: CGPoint(x: mx - tailLen, y: my - tailLen * 0.5))
+                    ctx.stroke(meteor,
+                               with: .linearGradient(
+                                Gradient(colors: [Color(hex:"E2C94E"), .clear]),
+                                startPoint: CGPoint(x: mx, y: my),
+                                endPoint: CGPoint(x: mx - tailLen, y: my - tailLen * 0.5)),
+                               lineWidth: 1.5)
+                }
+                if celebrating {
+                    let burstT = fmod(t, 1.2)
+                    for i in 0..<20 {
+                        let angle = Double(i) / 20 * .pi * 2
+                        let dist = sz.width * 0.35 * CGFloat(burstT / 1.2)
+                        let px = sz.width/2 + cos(angle) * dist
+                        let py = sz.height/2 + sin(angle) * dist
+                        let alpha = max(0.0, 1.0 - burstT / 1.2)
+                        ctx.fill(Path(ellipseIn: CGRect(x:px-2, y:py-2, width:4, height:4)),
+                                 with: .color(Color(hex:"E2C94E").opacity(alpha)))
+                    }
+                }
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+// MARK: - Planet Animation
+struct PlanetAnimation: View {
+    let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
+
+    struct PlanetDef {
+        let color: Color
+        let orbitR: CGFloat
+        let radius: CGFloat
+        let speed: Double
+        let hasRing: Bool
+    }
+
+    let planets: [PlanetDef] = [
+        PlanetDef(color: Color(hex:"C8A882"), orbitR: 0.22, radius: 10, speed: 0.5, hasRing: false),
+        PlanetDef(color: Color(hex:"E8B4B8"), orbitR: 0.35, radius: 14, speed: 0.3, hasRing: true),
+        PlanetDef(color: Color(hex:"A78BFA"), orbitR: 0.46, radius: 10, speed: 0.18, hasRing: false),
+    ]
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            Canvas { ctx, sz in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let cx = sz.width/2, cy = sz.height/2
+                let visibleCount = max(1, min(3, Int(progress * 3) + 1))
+                for i in 0..<40 {
+                    let seed = Double(i * 97)
+                    let sx = sz.width * CGFloat((seed*0.618).truncatingRemainder(dividingBy:1))
+                    let sy = sz.height * CGFloat((seed*0.382).truncatingRemainder(dividingBy:1))
+                    let alpha = 0.3 + 0.5 * sin(t + seed)
+                    ctx.fill(Path(ellipseIn: CGRect(x:sx-1,y:sy-1,width:2,height:2)),
+                             with: .color(Color.white.opacity(alpha)))
+                }
+                let sunR: CGFloat = 16
+                ctx.fill(Path(ellipseIn: CGRect(x:cx-sunR, y:cy-sunR, width:sunR*2, height:sunR*2)),
+                         with: .color(Color(hex:"FFF176")))
+                for (i, planet) in planets.prefix(visibleCount).enumerated() {
+                    let orbitR = sz.width * planet.orbitR
+                    ctx.stroke(Path(ellipseIn: CGRect(x:cx-orbitR, y:cy-orbitR*0.4,
+                                                      width:orbitR*2, height:orbitR*0.8)),
+                               with: .color(Color.white.opacity(0.12)), lineWidth: 1)
+                    let angle = t * planet.speed + Double(i) * 2.1
+                    let px = cx + cos(angle) * orbitR
+                    let py = cy + sin(angle) * orbitR * 0.4
+                    if planet.hasRing && sin(angle) < 0 {
+                        let rw = planet.radius * 2.2
+                        ctx.stroke(Path(ellipseIn: CGRect(x:px-rw, y:py-planet.radius*0.3,
+                                                          width:rw*2, height:planet.radius*0.6)),
+                                   with: .color(Color(hex:"D4B896").opacity(0.7)), lineWidth: 3)
+                    }
+                    ctx.fill(Path(ellipseIn: CGRect(x:px-planet.radius, y:py-planet.radius,
+                                                    width:planet.radius*2, height:planet.radius*2)),
+                             with: .color(planet.color))
+                    if planet.hasRing && sin(angle) >= 0 {
+                        let rw = planet.radius * 2.2
+                        ctx.stroke(Path(ellipseIn: CGRect(x:px-rw, y:py-planet.radius*0.3,
+                                                          width:rw*2, height:planet.radius*0.6)),
+                                   with: .color(Color(hex:"D4B896").opacity(0.7)), lineWidth: 3)
+                    }
+                }
+                if celebrating {
+                    let burstT = fmod(t, 1.0)
+                    for i in 0..<24 {
+                        let angle = Double(i) / 24 * .pi * 2
+                        let dist = sz.width * 0.4 * CGFloat(burstT)
+                        let px = cx + cos(angle) * dist
+                        let py = cy + sin(angle) * dist * 0.5
+                        let alpha = max(0.0, 1.0 - burstT)
+                        ctx.fill(Path(ellipseIn: CGRect(x:px-3,y:py-3,width:6,height:6)),
+                                 with: .color(Color(hex:"A78BFA").opacity(alpha)))
+                    }
+                }
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
