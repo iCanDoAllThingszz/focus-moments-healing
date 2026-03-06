@@ -23,7 +23,9 @@ struct FocusView: View {
 
                 VStack(spacing: 0) {
                     // scene animation (60% height)
-                    SceneAnimationView(sceneId: route.scene.id, size: geo.size.height * 0.52)
+                    SceneAnimationView(sceneId: route.scene.id,
+                                       size: geo.size.height * 0.52,
+                                       progress: focusVM.progress)
                         .frame(width: geo.size.width, height: geo.size.height * 0.52)
                         .clipped()
 
