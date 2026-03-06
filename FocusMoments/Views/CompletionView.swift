@@ -61,9 +61,12 @@ struct CompletionView: View {
                     .padding(.horizontal)
 
                 // scene preview
-                SceneAnimationView(sceneId: route.scene.id, size: 120)
-                    .frame(width: 120, height: 120)
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+                SceneAnimationView(sceneId: route.scene.id,
+                                   size: 150,
+                                   progress: 1.0,
+                                   celebrating: true)
+                    .frame(width: 150, height: 150)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
 
                 Text("专注了 \(route.durationMinutes) 分钟")
                     .font(.system(.subheadline, design: .rounded))
