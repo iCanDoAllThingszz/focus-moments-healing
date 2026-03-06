@@ -14,6 +14,7 @@ enum CardSize {
 struct SceneCardView: View {
     let scene: Scene
     let size: CardSize
+    var isDark: Bool = false
     var onTap: (() -> Void)? = nil
 
     @State private var isPressed = false
@@ -22,18 +23,28 @@ struct SceneCardView: View {
         ZStack {
             // gradient background
             RoundedRectangle(cornerRadius: AppConstants.Radius.card)
-                .fill(LinearGradient(colors: scene.cardGradient,
-                                     startPoint: .topLeading, endPoint: .bottomTrailing))
+                .fill(LinearGradient(
+                    colors: isDark
+                        ? scene.cardGradient.map { $0.opacity(0.55) } + [Color.white.opacity(0.03)]
+                        : scene.cardGradient,
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing))
 
-            // glassmorphism overlay
+            // glass overlay
             RoundedRectangle(cornerRadius: AppConstants.Radius.card)
-                .fill(.ultraThinMaterial.opacity(0.15))
+                .fill(isDark
+                      ? AnyShapeStyle(.ultraThinMaterial.opacity(0.3))
+                      : AnyShapeStyle(.ultraThinMaterial.opacity(0.15)))
 
-            // gradient border
+            // border
             RoundedRectangle(cornerRadius: AppConstants.Radius.card)
-                .strokeBorder(LinearGradient(colors: scene.cardGradient + [.white.opacity(0.6)],
-                                             startPoint: .topLeading, endPoint: .bottomTrailing),
-                              lineWidth: 1.5)
+                .strokeBorder(
+                    isDark
+                    ? LinearGradient(colors: [.white.opacity(0.2), .white.opacity(0.05)],
+                                     startPoint: .topLeading, endPoint: .bottomTrailing)
+                    : LinearGradient(colors: scene.cardGradient + [.white.opacity(0.6)],
+                                     startPoint: .topLeading, endPoint: .bottomTrailing),
+                    lineWidth: isDark ? 1 : 1.5)
 
             VStack(spacing: AppConstants.Spacing.sm) {
                 SceneAnimationView(sceneId: scene.id, size: size == .featured ? 140 : 90)
@@ -44,7 +55,7 @@ struct SceneCardView: View {
                 if size == .featured {
                     Text(scene.description)
                         .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.85))
+                        .foregroundStyle(isDark ? .white.opacity(0.7) : .white.opacity(0.85))
                         .multilineTextAlignment(.center)
                 }
             }
@@ -67,17 +78,19 @@ struct SceneCardView: View {
         .frame(height: size.height)
         .scaleEffect(isPressed ? 0.95 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
+        .shadow(
+            color: isDark
+                ? .black.opacity(0.4)
+                : (scene.cardGradient.first ?? .gray).opacity(0.25),
+            radius: 12, x: 0, y: 6)
         .onTapGesture {
             guard size != .locked else { return }
-            let impact = UIImpactFeedbackGenerator(style: .medium)
-            impact.impactOccurred()
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             isPressed = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isPressed = false
                 onTap?()
             }
         }
-        .shadow(color: (scene.cardGradient.first ?? .gray).opacity(0.25),
-                radius: 12, x: 0, y: 6)
     }
 }
