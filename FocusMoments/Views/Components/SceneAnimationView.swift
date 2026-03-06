@@ -4,18 +4,26 @@ import SwiftUI
 struct SceneAnimationView: View {
     let sceneId: String
     var size: CGFloat = 200
+    var progress: Double = 0
+    var celebrating: Bool = false
 
     var body: some View {
         switch sceneId {
-        case "tree":       TreeAnimation(size: size)
-        case "cat":        CatAnimation(size: size)
-        case "fish":       FishAnimation(size: size)
-        case "bird":       BirdAnimation(size: size)
-        case "moon":       MoonAnimation(size: size)
-        case "flower":     FlowerAnimation(size: size)
-        case "butterfly":  ButterflyAnimation(size: size)
-        case "rainbow":    RainbowAnimation(size: size)
-        default:           TreeAnimation(size: size)
+        case "tree":       TreeAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "cat":        CatAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "fish":       FishAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "bird":       BirdAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "moon":       MoonAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "flower":     FlowerAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "butterfly":  ButterflyAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "rainbow":    RainbowAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "rain":       RainAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "campfire":   CampfireAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "snow":       SnowAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "aurora":     AuroraAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "meteor":     MeteorAnimation(size: size, progress: progress, celebrating: celebrating)
+        case "planet":     PlanetAnimation(size: size, progress: progress, celebrating: celebrating)
+        default:           TreeAnimation(size: size, progress: progress, celebrating: celebrating)
         }
     }
 }
@@ -23,6 +31,8 @@ struct SceneAnimationView: View {
 // MARK: - Tree Animation
 struct TreeAnimation: View {
     let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
 
     func drawBranch(ctx: GraphicsContext, sz: CGSize, x: CGFloat, y: CGFloat,
                     angle: CGFloat, length: CGFloat, depth: Int, sway: CGFloat, t: Double) {
@@ -97,6 +107,8 @@ struct TailShape: Shape {
 
 struct CatAnimation: View {
     let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
     @State private var breathScale: CGFloat = 1.0
     @State private var tailCurl: CGFloat = 0.3
 
@@ -161,6 +173,8 @@ struct CatAnimation: View {
 // MARK: - Fish Animation
 struct FishAnimation: View {
     let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
 
     var body: some View {
         TimelineView(.animation) { timeline in
@@ -222,6 +236,8 @@ struct FishAnimation: View {
 // MARK: - Bird Animation
 struct BirdAnimation: View {
     let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
 
     var body: some View {
         TimelineView(.animation) { timeline in
@@ -271,6 +287,8 @@ struct BirdAnimation: View {
 // MARK: - Moon Animation
 struct MoonAnimation: View {
     let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
 
     let starPositions: [(CGFloat, CGFloat)] = [
         (0.1, 0.1), (0.3, 0.08), (0.7, 0.05), (0.85, 0.12), (0.15, 0.25),
@@ -328,6 +346,8 @@ struct PetalShape: Shape {
 
 struct FlowerAnimation: View {
     let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
     @State private var bloom: CGFloat = 0
     @State private var rotation: Double = 0
 
@@ -380,6 +400,8 @@ struct FlowerAnimation: View {
 // MARK: - Butterfly Animation
 struct ButterflyAnimation: View {
     let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
 
     func drawWings(in ctx: inout GraphicsContext, sz: CGSize, flap: CGFloat, color: Color) {
         let cx = sz.width / 2
@@ -456,6 +478,8 @@ struct RainbowCloud {
 
 struct RainbowAnimation: View {
     let size: CGFloat
+    var progress: Double = 0
+    var celebrating: Bool = false
     let rainbowColors: [Color] = [
         Color(hex: "FF0000"), Color(hex: "FF7F00"), Color(hex: "FFFF00"),
         Color(hex: "00FF00"), Color(hex: "0000FF"), Color(hex: "8B00FF")
