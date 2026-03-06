@@ -34,8 +34,34 @@ struct TreeAnimation: View {
     var progress: Double = 0
     var celebrating: Bool = false
 
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            Canvas { ctx, sz in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let sway = sin(t * 0.8) * 0.06
+                let depth = Int(2 + progress * 5)
+                let trunkH = sz.height * (0.15 + CGFloat(progress) * 0.25)
+                drawBranch(ctx: ctx, sz: sz,
+                           x: sz.width/2, y: sz.height * 0.9,
+                           angle: -.pi/2, length: trunkH,
+                           depth: depth, sway: sway, t: t, progress: progress)
+                if celebrating {
+                    for i in 0..<40 {
+                        let seed = Double(i * 137)
+                        let lx = sz.width * (seed * 0.618).truncatingRemainder(dividingBy: 1.0)
+                        let ly = sz.height * fmod(seed * 0.382 + t * 0.4, 1.0)
+                        let leafR: CGFloat = 4
+                        ctx.fill(Path(ellipseIn: CGRect(x:lx-leafR, y:ly-leafR, width:leafR*2, height:leafR*2)),
+                                 with: .color(Color(hex:"FFD700").opacity(0.85)))
+                    }
+                }
+            }
+        }
+        .frame(width: size, height: size)
+    }
+
     func drawBranch(ctx: GraphicsContext, sz: CGSize, x: CGFloat, y: CGFloat,
-                    angle: CGFloat, length: CGFloat, depth: Int, sway: CGFloat, t: Double) {
+                    angle: CGFloat, length: CGFloat, depth: Int, sway: CGFloat, t: Double, progress: Double) {
         guard depth > 0, length > 2 else { return }
         let endX = x + cos(angle + sway * CGFloat(depth)) * length
         let endY = y + sin(angle + sway * CGFloat(depth)) * length
@@ -44,33 +70,20 @@ struct TreeAnimation: View {
         path.addLine(to: CGPoint(x: endX, y: endY))
         let w = CGFloat(depth) * 0.8
         let brown = Color(red: 0.4, green: 0.25, blue: 0.1)
-        let green = Color(red: 0.3, green: 0.5, blue: 0.2)
-        ctx.stroke(path, with: .color(depth > 3 ? brown : green), lineWidth: max(w, 0.5))
+        ctx.stroke(path, with: .color(depth > 3 ? brown : Color(red:0.3,green:0.5,blue:0.2)),
+                   lineWidth: max(w, 0.5))
         if depth <= 2 {
             let leafR = length * 0.9
-            let leafRect = CGRect(x: endX - leafR / 2, y: endY - leafR / 2, width: leafR, height: leafR)
-            let leafAlpha = 0.5 + 0.5 * sin(t * 1.2 + Double(depth))
+            let leafAlpha = CGFloat(progress) * (0.5 + 0.5 * sin(t * 1.2 + Double(depth)))
+            let leafRect = CGRect(x: endX-leafR/2, y: endY-leafR/2, width: leafR, height: leafR)
             ctx.fill(Path(ellipseIn: leafRect),
-                     with: .color(Color(red: 0.3, green: 0.7, blue: 0.3).opacity(leafAlpha)))
+                     with: .color(Color(red:0.2,green:0.7,blue:0.3).opacity(leafAlpha)))
         }
         let spread: CGFloat = .pi / 5
         drawBranch(ctx: ctx, sz: sz, x: endX, y: endY, angle: angle - spread,
-                   length: length * 0.68, depth: depth - 1, sway: sway, t: t)
+                   length: length * 0.68, depth: depth-1, sway: sway, t: t, progress: progress)
         drawBranch(ctx: ctx, sz: sz, x: endX, y: endY, angle: angle + spread,
-                   length: length * 0.68, depth: depth - 1, sway: sway, t: t)
-    }
-
-    var body: some View {
-        TimelineView(.animation) { timeline in
-            Canvas { ctx, sz in
-                let t = timeline.date.timeIntervalSinceReferenceDate
-                let sway = sin(t * 0.8) * 0.06
-                drawBranch(ctx: ctx, sz: sz, x: sz.width / 2, y: sz.height * 0.85,
-                           angle: -.pi / 2, length: sz.height * 0.22,
-                           depth: 7, sway: sway, t: t)
-            }
-        }
-        .frame(width: size, height: size)
+                   length: length * 0.68, depth: depth-1, sway: sway, t: t, progress: progress)
     }
 }
 
@@ -307,7 +320,7 @@ struct MoonAnimation: View {
                                                     width: r * 2, height: r * 2)),
                              with: .color(Color.white.opacity(alpha)))
                 }
-                let riseProgress = min(1.0, t / 4.0)
+                let riseProgress = CGFloat(progress)
                 let moonY = sz.height * (0.9 - riseProgress * 0.6)
                 let moonR = sz.width * 0.18
                 ctx.fill(Path(ellipseIn: CGRect(x: sz.width * 0.5 - moonR * 1.8,
@@ -348,7 +361,7 @@ struct FlowerAnimation: View {
     let size: CGFloat
     var progress: Double = 0
     var celebrating: Bool = false
-    @State private var bloom: CGFloat = 0
+    var bloom: CGFloat { CGFloat(progress) }
     @State private var rotation: Double = 0
 
     let petalColors: [Color] = [
@@ -387,9 +400,6 @@ struct FlowerAnimation: View {
         }
         .frame(width: size, height: size)
         .onAppear {
-            withAnimation(.spring(response: 1.5, dampingFraction: 0.6).delay(0.2)) {
-                bloom = 1.0
-            }
             withAnimation(.linear(duration: 20).repeatForever(autoreverses: false)) {
                 rotation = 360
             }
@@ -438,29 +448,30 @@ struct ButterflyAnimation: View {
         TimelineView(.animation) { timeline in
             Canvas { ctx, sz in
                 let t = timeline.date.timeIntervalSinceReferenceDate
-                let flap = CGFloat(0.6 + 0.4 * sin(t * 6))
-                let bx = sz.width / 2 + sz.width * 0.35 * CGFloat(sin(t * 0.7))
-                let by = sz.height / 2 + sz.height * 0.3 * CGFloat(sin(t * 1.1))
-                ctx.translateBy(x: bx - sz.width / 2, y: by - sz.height / 2)
-                drawWings(in: &ctx, sz: sz, flap: flap, color: Color(hex: "F9844A"))
-                var butterflyBody = Path()
-                butterflyBody.addEllipse(in: CGRect(x: sz.width / 2 - 3,
-                                                    y: sz.height / 2 - 10,
-                                                    width: 6, height: 20))
-                ctx.fill(butterflyBody, with: .color(Color(hex: "795548")))
-                let antDirs: [CGFloat] = [-1, 1]
-                for side in antDirs {
-                    var ant = Path()
-                    ant.move(to: CGPoint(x: sz.width / 2, y: sz.height / 2 - 10))
-                    ant.addQuadCurve(
-                        to: CGPoint(x: sz.width / 2 + side * 12, y: sz.height / 2 - 22),
-                        control: CGPoint(x: sz.width / 2 + side * 6, y: sz.height / 2 - 14))
-                    ctx.stroke(ant, with: .color(Color(hex: "795548")), lineWidth: 1)
-                    let dotR: CGFloat = 2
-                    ctx.fill(Path(ellipseIn: CGRect(x: sz.width / 2 + side * 12 - dotR,
-                                                    y: sz.height / 2 - 24,
-                                                    width: dotR * 2, height: dotR * 2)),
-                             with: .color(Color(hex: "795548")))
+                let butterflyCount = max(1, Int(progress * 2.5) + 1)
+                for bIdx in 0..<min(butterflyCount, 3) {
+                    let bOffset = Double(bIdx) * 2.1
+                    let flap = CGFloat(0.6 + 0.4 * sin(t * 6 + bOffset))
+                    let bx = sz.width/2 + sz.width*0.35*CGFloat(sin(t * 0.7 + bOffset))
+                    let by = sz.height/2 + sz.height*0.3*CGFloat(sin(t * 1.1 + bOffset))
+                    var bCtx = ctx
+                    bCtx.translateBy(x: bx - sz.width/2, y: by - sz.height/2)
+                    drawWings(in: &bCtx, sz: sz, flap: flap, color: Color(hex:"F9844A"))
+                    var body = Path()
+                    body.addEllipse(in: CGRect(x: sz.width/2-3, y: sz.height/2-10, width: 6, height: 20))
+                    bCtx.fill(body, with: .color(Color(hex:"795548")))
+                    let dirs: [CGFloat] = [-1, 1]
+                    for side in dirs {
+                        var ant = Path()
+                        ant.move(to: CGPoint(x: sz.width/2, y: sz.height/2-10))
+                        ant.addQuadCurve(
+                            to: CGPoint(x: sz.width/2 + side*12, y: sz.height/2-22),
+                            control: CGPoint(x: sz.width/2 + side*6, y: sz.height/2-14)
+                        )
+                        bCtx.stroke(ant, with: .color(Color(hex:"795548")), lineWidth: 1)
+                        bCtx.fill(Path(ellipseIn: CGRect(x:sz.width/2+side*12-2, y:sz.height/2-24, width:4, height:4)),
+                                  with: .color(Color(hex:"795548")))
+                    }
                 }
             }
         }
@@ -511,7 +522,7 @@ struct RainbowAnimation: View {
                                  with: .color(Color.white.opacity(0.9)))
                     }
                 }
-                let showProgress = min(1.0, max(0.0, t / 5.0))
+                let showProgress = progress
                 let center = CGPoint(x: sz.width / 2, y: sz.height * 0.75)
                 for (i, color) in rainbowColors.reversed().enumerated() {
                     let r = sz.width * (0.22 + CGFloat(i) * 0.05)
